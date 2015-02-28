@@ -13,8 +13,11 @@ import sqlite3 as lite
 import pandas as pd
 import sys
 
-# if windows
+# for mac
 con = lite.connect('/Users/frankCorrigan/ThinkfulData/getting_started.db')
+
+# for windows
+#
 
 month = raw_input("Please select month: ")
 
