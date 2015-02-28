@@ -14,7 +14,7 @@ import pandas as pd
 import sys
 
 # if windows
-con = lite.connect('C:\Users\fcorrigan\ThinkfulData\getting_started.db')
+con = lite.connect('/Users/frankCorrigan/ThinkfulData/getting_started.db')
 
 month = raw_input("Please select month: ")
 
