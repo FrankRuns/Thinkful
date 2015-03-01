@@ -65,4 +65,9 @@ print "Final model: 'Interest Rate = " + str(round(f.params[0])) + " + " + str(f
 # the r2 = .65 so our model explains roughly 65% of variation in interest rates
 # TODO: consider re-hashing with feature selection package in R (stepwise selection)
 
+def linear_function(FICO, Amount):
+	print "FICO = " + str(FICO)
+	print "Amount = " + str(Amount)
+	interest_rate = (f.params[0] + f.params[1]*FICO + f.params[2]*Amount)
+	print "Expected interest rate = " + str(interest_rate)
 
