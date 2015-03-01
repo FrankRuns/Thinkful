@@ -19,4 +19,4 @@ chi, p = stats.chisquare(freq.values())
 # what's the explanation? -- is it that people on the lending club can't get a loan from a bankso they are attempting peer to peer lending?
 # do we get these stats because the observed data is not normally distributed?
 # how do we know what the expected distribution for open credit lines is?
-
+# if chi-squared is testing for normality... why not plot a histogram?
