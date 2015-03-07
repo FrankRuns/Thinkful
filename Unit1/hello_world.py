@@ -1,1 +1,1 @@
-print 'Hello, World, my name is Frank Corrigan'
+print 'Hello, World, my name is Frank Corrigan. I am learning python... and improving data science knowledge.'
