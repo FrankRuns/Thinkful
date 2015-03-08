@@ -2,6 +2,7 @@ import datetime
 import requests
 import sqlite3 as lite
 import collections
+import pandas as pd
 
 # API queries to forecast.io look like below, TIME = Unix timestamp
 # https://api.forecast.io/forecast/APIKEY/LATITUDE,LONGITUDE,TIME
@@ -39,4 +40,23 @@ for k,v in cities.iteritems():
 			cur.execute('UPDATE daily_temp SET ' + k + ' = ' + str(r.json()['daily']['data'][0]['temperatureMax']) + ' WHERE day_of_reading = ' + query_date.strftime('%s'))
 		query_date += datetime.timedelta(days=1)
 
+df = pd.read_sql_query("SELECT * FROM daily_temp", con, index_col = "day_of_reading")
+
 con.close()
+
+# Find temp range for each city
+for i in df.columns:
+	lower = min(df[i])
+	upper = max(df[i])
+	range = upper - lower
+	print (i, range)
+
+# find the mean termperature for each city
+for i in df.columns:
+	print (i, df[i].mean())
+
+# variance for each city?
+
+# Any patterns?
+
+# which cities has the largest temperature changes over the time period?

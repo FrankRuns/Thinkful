@@ -5,7 +5,10 @@ import sqlite3 as lite
 import requests
 from pandas.io.json import json_normalize
 import datetime
+import pandas as pd
 import matplotlib.pyplot as plt
+
+# this script requires SQL Lite
 
 r = requests.get('http://www.citibikenyc.com/stations/json')
 df = json_normalize(r.json()['stationBeanList'])
@@ -31,7 +34,7 @@ with con:
 		cur.execute("CREATE TABLE available_bikes ( execution_time INT, " +  ", ".join(station_ids) + ");")
 
 # populate available bikes table with a hour of data
-for i in range(60):
+for i in range(3):
 	r = requests.get('http://www.citibikenyc.com/stations/json')
 	exec_time = parse(r.json()['executionTime'])
 
@@ -48,7 +51,7 @@ for i in range(60):
 
 	time.sleep(60)
 
-con.close()
+df = pd.read_sql_query("SELECT * FROM available_bikes ORDER BY execution_time",con,index_col='execution_time')
 
 hour_change = collections.defaultdict(int)
 for col in df.columns:
@@ -60,11 +63,14 @@ for col in df.columns:
 			station_change += abs(station_vals[k] - station_vals[k+1])
 		hour_change[int(station_id)] = station_change
 
+max_station = max(hour_change, key=hour_change.get)
+
 cur.execute("SELECT id, stationname, latitude, longitude FROM citibike_reference WHERE id = ?", (max_station,))
 data = cur.fetchone()
 print "The most active station is station %s at %s latitude: %s longitude: %s " % data
 print "With " + str(hour_change[max_station]) + " bikes coming and going in the hour between " + datetime.datetime.fromtimestamp(int(df.index[0])).strftime('%Y-%m-%dT%H:%H:%S') + " and " + datetime.datetime.fromtimestamp(int(df.index[-1])).strftime('%Y-%m-%dT%H:%H:%S')
-#print "With " + str(hour_change[max_station]) + " bikes coming and going in the hour between " + datetime.datetime.fromtimestamp(int(df.index[0])).strftime('%Y-%m-%dT%H:%M:%S') + " and " + datetime.datetime.fromtimestamp(int(df.index[-1])).strftime('%Y-%m-%dT%H:%M:%S')
 
 plt.bar(hour_change.keys(), hour_change.values())
 plt.show()
+
+con.close()
