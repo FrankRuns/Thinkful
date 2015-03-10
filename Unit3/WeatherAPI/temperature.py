@@ -56,7 +56,17 @@ for i in df.columns:
 	print (i, df[i].mean())
 
 # variance for each city?
+for i in df.columns:
+	v = 0
+	m = df[i].mean()
+	for el in df[i]:
+		v += (el - m)**2
+	print (i, v)
 
 # Any patterns?
+import matplotlib.pyplot as plt 
+pd.DataFrame.plot(df, kind='line')
+# see that NY, Boston, Cleveland move in same pattern. Denver has high variability and Seattle is high temp (comparably) with very low variability
 
 # which cities has the largest temperature changes over the time period?
+# Denver. Shown in range, variance, and the line chart.
