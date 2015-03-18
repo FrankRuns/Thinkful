@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import csv
 import numpy as np
 import sqlite3 as lite
-import math
+# import math
 import statsmodels.api as sm
 
 # store url for school years
@@ -64,7 +64,7 @@ with open('school_years.csv') as inputFile:
 
 # create table to hold gdp data
 with con:
-    cur.execute('CREATE TABLE gdp (country_name, _1999, _2000, _2001, _2002, _2003, _2004, _2005, _2006, _2007, _2008, _2009, _2010)')
+    cur.execute('CREATE TABLE gdp (country_name text, _1999 numeric, _2000 numeric, _2001 numeric, _2002 numeric, _2003 numeric, _2004 numeric, _2005 numeric, _2006 numeric, _2007 numeric, _2008 numeric, _2009 numeric, _2010 numeric)')
 
 # populate gdp table from local csv
 with open('/Users/frankCorrigan/ThinkfulData/ny.gdp.mktp.cd_Indicator_en_csv_v2.csv') as inputFile:
@@ -96,7 +96,7 @@ gdp = lastdf['gdp'].map(lambda x: float(x))
 school_years = lastdf['totalyears'].map(lambda x: int(x))
 
 # convert gdp to log in order to scale properly
-log_gdp = gdp.map(lambda x: math.log(x))
+log_gdp = gdp.map(lambda x: np.log(x))
 
 # create scatterplot of gdp vs school years
 colors = np.random.rand(len(gdp))
