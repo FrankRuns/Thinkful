@@ -61,7 +61,7 @@ rfc.oob_score_
 # determine most important features
 fi = enumerate(rfc.feature_importances_)
 cols = train_data.columns
-[(value,cols[i]) for (i,value) in fi if value > 0.04]
+[(value,cols[i]) for (i,value) in fi if value > 0.00]
 
 # define validation set and make predictions
 val_target = forval['Activity']
@@ -73,9 +73,11 @@ test_target = fortest['Activity']
 test_data = fortest.ix[:,1:-2]
 test_pred = rfc.predict(test_data)
 
+# calc and print accuracy scores
 print("mean accuracy score for validation set = %f" %(rfc.score(val_data, val_target)))
-print("mean accuracy score for test set = %f" %(rf.score(test_data, test_target)))
+print("mean accuracy score for test set = %f" %(rfc.score(test_data, test_target)))
 
+# visualize confusion matrix
 test_cm = skm.confusion_matrix(test_target, test_pred)
 pl.matshow(test_cm)
 pl.title('Confusion matrix for test data')
@@ -83,5 +85,6 @@ pl.colorbar()
 pl.show()
 
 print("Accuracy = %f" %(skm.accuracy_score(test_target, test_pred)))
+print("Precision = %f" %(skm.precision_score(test_target, test_pred)))
 print("Recall = %f" %(skm.recall_score(test_target, test_pred)))
 print("F1 score = %f" %(skm.f1_score(test_target, test_pred)))
