@@ -1,6 +1,7 @@
 from sklearn import datasets
 import matplotlib.pyplot as plt
 from collections import Counter
+import numpy as np
 
 # load and select relevant data
 iris = datasets.load_iris()
@@ -48,7 +49,7 @@ def prep_data():
 	X = iris.data[:,:2]
 	Y = iris.target
 
-# ats = [sepal_length, sepal_width], k = # of neighbors
+# ats = [random_sepal_length, random_sepal_width], k = # of neighbors
 def knn(ats, k):
 	prep_data()
 

@@ -59,9 +59,10 @@ rfc.fit(train_data, train_target)
 rfc.oob_score_
 
 # determine most important features
-fi = enumerate(rfc.feature_importances_)
-cols = train_data.columns
-[(value,cols[i]) for (i,value) in fi if value > 0.00]
+importances = rfc.feature_importances_
+indices = np.argsort(importances)[::-1]
+for i in range(10):
+    print("%d. feature %d (%f)" % (i + 1, indices[i], importances[indices[i]]))
 
 # define validation set and make predictions
 val_target = forval['Activity']
