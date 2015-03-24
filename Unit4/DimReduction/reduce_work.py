@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 from collections import Counter
 from scipy.cluster.vq import kmeans, vq, whiten
 
+print 'Preparing the data from UCI...'
+
 df = pd.read_csv(
 	filepath_or_buffer = 'https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data',
 	header=None,
@@ -16,6 +18,11 @@ df = pd.read_csv(
 df.columns = ['sepal_len', 'sepal_wid', 'petal_len', 'petal_wid', 'class']
 df.dropna(inplace=True)
 
+print 'Dataframe looks like this...'
+print '# of observsations is ' + str(len(df))
+print df.head()
+
+print 'Seperate x vars from y vars...'
 X = df.ix[:,0:4].values
 y = df.ix[:,4].values
 
@@ -50,9 +57,11 @@ y = df.ix[:,4].values
 # py.image.save_as({'data': data}, 'iris_hisos.png')
 # py.iplot(fig)
 
+print 'Normalize the x vars...'
 # standardize data on unit scale
 X_std = StandardScaler().fit_transform(X)
 
+print 'Using the x vars, calculate the covariance matrix, eigenvalues / genvectors / eigenpairs and explained variance of each variable. The cumulative explained variance array looks like this:'''
 # calculate covariance matrix
 # mean_vec = np.mean(X_std, axis=0)
 # cov_mat = (X_std - mean_vec).T.dot((X_std - mean_vec)) / (X_std.shape[0]-1)
@@ -67,7 +76,10 @@ eig_pairs.reverse()
 
 # determine explained variance of each eigenvalue
 tot = sum(eig_vals)
+var_exp = [(i / tot)*100 for i in sorted(eig_vals, reverse=True)]
 cum_var_exp = np.cumsum(var_exp)
+
+print cum_var_exp
 
 # trace1 = Bar(
 # 	x=['PC %s' %i for i in range(1,5)],
@@ -95,10 +107,14 @@ matrix_w = np.hstack((eig_pairs[0][1].reshape(4,1),
 # go back to usable values
 Y = X_std.dot(matrix_w)
 
+print 'Build PCA and fit normalized x vars...'
 # PCA with scikit learn
 from sklearn.decomposition import PCA as sklearnPCA
 sklearn_pca = sklearnPCA(n_components=2)
 Y_sklearn = sklearn_pca.fit_transform(X_std)
+
+print Y_sklearn
+print len(Y_sklearn)
 
 df['class'] = pd.Categorical(df['class']).labels
 first = []; second = []
@@ -107,6 +123,7 @@ for i in Y_sklearn:
 for i in Y_sklearn:
 	second.append(i[1])
 plt.scatter(first, second, c=df['class'])
+plt.show()
 
 #################################################
 
