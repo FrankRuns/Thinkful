@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+import matplotlib.pyplot as plt 
+
+print 'Preparing the dataset...'
 
 # TODO: load data directly from website
 loans = pd.read_csv("/Users/frankCorrigan/ThinkfulData/LoanStats3c.csv")
@@ -17,6 +20,8 @@ loansDF.dropna(inplace=True)
 
 # reformat interest rate. drop '%' sign and convert to float
 loansDF['InterestRate'] = map(lambda x: float(x[:x.find('%')]), loansDF['InterestRate'])
+
+print 'Building model #1...'
 
 # include intercept in data
 loansDF['Intercept'] = float(1.0)
