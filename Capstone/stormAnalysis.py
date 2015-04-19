@@ -1,10 +1,13 @@
 import pandas as pd 
 import numpy as np 
+from sklearn import preprocessing
 import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import r2_score
 import sklearn.metrics as skm
 
-data = pd.read_csv('allData.csv', low_memory=False)
+data = pd.read_csv('/Users/frankCorrigan/ThinkfulData/allData.csv', low_memory=False)
 
 # Goals
 # 1. Determine the most harmful storm type
@@ -26,7 +29,7 @@ data = pd.read_csv('allData.csv', low_memory=False)
 #     print i, float(data['TOTAL_DAMAGE'][i])
 
 # Subset smaller dataset to work with
-harmfulData = mini_data = data.ix[:,['EVENT_TYPE', 'DEATHS_DIRECT', 'DEATHS_INDIRECT', 'DAMAGE_PROPERTY', 'DAMAGE_CROPS']]
+harmfulData = mini_data = data.ix[:,['EPISODE_ID', 'EVENT_TYPE', 'DEATHS_DIRECT', 'DEATHS_INDIRECT', 'DAMAGE_PROPERTY', 'DAMAGE_CROPS']]
 harmfulData.dropna(inplace=True)
 
 # Fix the property and crop damage data
@@ -72,52 +75,79 @@ data[data['EVENT_TYPE'] == 'Tsunami'].STATE # America Samoa, California, Hawaii,
 
 # Predict storm type. Clean data, then use random forest and initial predictors of propoert damage, crop dmaage, deaths, injuries, state, and month to predict event type
 # Begin by subsetting the dataframe
-mini_data = data.ix[:,['EVENT_TYPE', 'MONTH_NAME', 'STATE', 'INJURIES_DIRECT', 'INJURIES_INDIRECT', 'DEATHS_DIRECT', 'DEATHS_INDIRECT', 'DAMAGE_PROPERTY', 'DAMAGE_CROPS', 'SOURCE']]
-mini_data.dropna(inplace=True)
-removeKMBT(mini_data, 'DAMAGE_PROPERTY')
-removeKMBT(mini_data, 'DAMAGE_CROPS')
 
-mini_data['EVENT_TYPE2'] = pd.Categorical(mini_data['EVENT_TYPE']).labels
-keepStates = mini_data['STATE']
-mini_data['STATE'] = pd.Categorical(mini_data['STATE']).labels
-keepMonths = mini_data['MONTH_NAME']
-mini_data['MONTH_NAME'] = pd.Categorical(mini_data['MONTH_NAME']).labels
+md = data.ix[:,['END_DAY', 'BEGIN_DAY', 'EVENT_TYPE', 'STATE_FIPS', 'MONTH_NAME', 'STATE', 'INJURIES_DIRECT', 'INJURIES_INDIRECT', 'DEATHS_DIRECT', 'DEATHS_INDIRECT', 'DAMAGE_PROPERTY', 'DAMAGE_CROPS', 'SOURCE']]
+md.dropna(inplace=True)
+removeKMBT(md, 'DAMAGE_PROPERTY')
+removeKMBT(md, 'DAMAGE_CROPS')
+md['DURATION'] = md['END_DAY'] - md['BEGIN_DAY']
+md = md[md['DURATION'] > 0] # flawed. need to use duration in muntes, not days. 
+md = md[md['DAMAGE_PROPERTY'] > 0]
+md = md[md['EVENT_TYPE'] == 'Tornado']
+# should also add tornado width and length to analysis for prediction
 
-test_idx = np.random.uniform(0, 1, len(mini_data)) <= 0.3
-train = mini_data[test_idx==True]
-test = mini_data[test_idx==False]
+# Simple plot of property damage shows we will have scaling issues
+plt.plot(md['DAMAGE_PROPERTY'])
+md['DAMAGE_PROPERTY_SCALED'] = preprocessing.scale(md['DAMAGE_PROPERTY'])
 
-train_target = train['EVENT_TYPE2']
-train_data = train.ix[:,1:-2]
+# Quick value count of months show we have far more than 12 months in our dat set!
+len(md['MONTH_NAME'].value_counts()) # it's probably additional whitespace
+md['MONTH_NAME'] = map(lambda x: x.replace(" ", ""), md['MONTH_NAME'])
+
+# Problems with event type names -- sure. Remove repeates.
+# Excessive Heat or High Heat? WINTER WEATHER or Winter Weather
+md['EVENT_TYPE'] = map(lambda x: x.replace("WINTER WEATHER", "Winter Weather"), md['EVENT_TYPE'])
+md['EVENT_TYPE'] = map(lambda x: x.replace("Excessive ", ""), md['EVENT_TYPE'])
+
+# Now convert strings into categorical variables
+# md['STATE'] = pd.Categorical(md['STATE']).labels
+keepEvent = md['EVENT_TYPE']
+md['EVENT_TYPE'] = pd.Categorical(md['EVENT_TYPE']).labels
+keepMonths = md['MONTH_NAME']
+md['MONTH_NAME'] = pd.Categorical(md['MONTH_NAME']).labels
+
+test_idx = np.random.uniform(0, 1, len(md)) <= 0.3
+train = md[test_idx==True]
+test = md[test_idx==False]
+
+train_target = train['DAMAGE_PROPERTY_SCALED']
+# train_data = train.ix[:,['DURATION', 'EVENT_TYPE', 'STATE_FIPS', 'MONTH_NAME']]
+train_data = train.ix[:,['MONTH_NAME']]
 rfc = RandomForestClassifier(n_estimators=500, oob_score=True)
+rfr = RandomForestRegressor(n_estimators=100, oob_score=True)
 rfc.fit(train_data, train_target)
+rfr.fit(train_data, train_target)
 
 rfc.oob_score_
 
-test_target = test['EVENT_TYPE2']
-test_data = test.ix[:,1:-2]
-test_pred = rfc.predict(test_data)
+test_target = test['DAMAGE_PROPERTY_SCALED']
+# test_data = test.ix[:,['DURATION', 'EVENT_TYPE', 'STATE_FIPS', 'MONTH_NAME']]
+test_data = test.ix[:,['MONTH_NAME']]
+test_pred = rfr.predict(test_data)
 
-test_cm = skm.confusion_matrix(test_target, test_pred)
+r2 = r2_score(test_target, test_pred)
+mse = np.mean((test_target - test_pred)**2)
+
+# test_cm = skm.confusion_matrix(test_target, test_pred)
 
 print("mean accuracy score for test set = %f" %(rfc.score(test_data, test_target)))
 print("Accuracy = %f" %(skm.accuracy_score(test_target, test_pred)))
 
-# Ideas for improving model
-# 1. Use more predictors?
-# 2. Consider feature engineering -- storm duration, 
+# # Ideas for improving model
+# # 1. Use more predictors?
+# # 2. Consider feature engineering -- storm duration, 
 
-# harmfulData['EVENT_TYPE2'] = pd.Categorical(harmfulData['EVENT_TYPE']).labels
-# test_idx = np.random.uniform(0, 1, len(harmfulData)) <= 0.3
-# train = harmfulData[test_idx==True]
-# test = harmfulData[test_idx==False]
-# train_target = train['EVENT_TYPE2']
-# train_data = train.ix[:,1:-2]
-# model = RandomForestClassifier(n_estimators=500, oob_score=True)
-# model.fit(train_data, train_target)
+# # harmfulData['EVENT_TYPE2'] = pd.Categorical(harmfulData['EVENT_TYPE']).labels
+# # test_idx = np.random.uniform(0, 1, len(harmfulData)) <= 0.3
+# # train = harmfulData[test_idx==True]
+# # test = harmfulData[test_idx==False]
+# # train_target = train['EVENT_TYPE2']
+# # train_data = train.ix[:,1:-2]
+# # model = RandomForestClassifier(n_estimators=500, oob_score=True)
+# # model.fit(train_data, train_target)
 
-##### PREDICTING PROPERTY DAMAGE OF STORM
+# ##### PREDICTING PROPERTY DAMAGE OF STORM
 
-# Predict property damage by storm. For example, what is the expected property damage caused by a flood in 
+# # Predict property damage by storm. For example, what is the expected property damage caused by a flood in 
 
 
