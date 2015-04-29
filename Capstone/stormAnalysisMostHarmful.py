@@ -132,14 +132,14 @@ def main():
 
 	# Train the model
 	train_target = train['EVENT_TYPE']
-	train_data = train.ix[:,['STATE', 'MONTH_NAME', 'DURATION', 'DAMAGE_PROPERTY']]
+	train_data = train.ix[:,['STATE', 'MONTH_NAME', 'DURATION', 'TOTAL_DAMAGE']]
 	rfc = RandomForestClassifier(n_estimators=500, oob_score=True)
 	rfc.fit(train_data, train_target)
 
 	print rfc.oob_score_
 
 	test_target = test['EVENT_TYPE']
-	test_data = test.ix[:,['STATE', 'MONTH_NAME', 'DURATION', 'DAMAGE_PROPERTY']]
+	test_data = test.ix[:,['STATE', 'MONTH_NAME', 'DURATION', 'TOTAL_DAMAGE']]
 	test_pred = rfc.predict(test_data)
 
 	plt.scatter(test_target, test_pred)
@@ -149,8 +149,12 @@ def main():
 	print("Accuracy = %f" %(skm.accuracy_score(test_target, test_pred)))
 
 	single_test_target = test['EVENT_TYPE'].iloc[40]
+	single_test_target2 = test['EVENT_TYPE'].iloc[0]
 	single_test_data = [44, 4, 960, 4000]
-	single_test_pred = rfc.predict(single_test_data)	
+	single_test_data2 = [26, 9, 2040, 5000]
+	single_test_pred = rfc.predict(single_test_data)
+	single_test_pred2 = rfc.predict(single_test_data2)	
+	single_test_pred_prob = rfc.predict_proba(single_test_data)
 
 # Function to clean financial variables so they can be added and multiplied
 # Need to convert 4K to $4,000, 3.56M to 3,560,000, etc.
